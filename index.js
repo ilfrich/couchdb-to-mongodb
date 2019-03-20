@@ -11,6 +11,7 @@ const databaseList = []
 const startDate = new Date().getTime()
 
 couchServer.db.list().then(databases => {
+    console.log("Found databases", databases)
     databases.forEach(databaseName => {
         if (databaseName.startsWith("_")) {
             // skip system databases
