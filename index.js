@@ -23,7 +23,9 @@ couchServer.db.list().then(databases => {
 
 const migrateDatabase = (dbList, index = 0) => {
     if (index >= dbList.length) {
-        return
+        return new Promise(resolve => {
+            resolve()
+        })
     }
 
     console.log("Migrating database", dbList[index])
@@ -42,9 +44,9 @@ const migrateDatabase = (dbList, index = 0) => {
         })
     })
 
-    Promise.all(promises).then(() => {
+    return Promise.all(promises).then(() => {
         console.log("Done")
-        migrateDatabase(dbList, index + 1)
+        return migrateDatabase(dbList, index + 1)
     })
 }
 
