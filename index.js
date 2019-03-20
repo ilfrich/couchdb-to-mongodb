@@ -52,6 +52,7 @@ const migrateDatabase = (dbList, index = 0) => {
 }
 
 // call the migration script with the database list
+console.log("Migrating", databaseList.length, "databases")
 migrateDatabase(databaseList).then(() => {
     const duration = (new Date().getTime() - startDate) / 1000
     console.log("Migration finished in", duration, "seconds")
