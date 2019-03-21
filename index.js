@@ -11,16 +11,27 @@ const databaseList = []
 const startDate = new Date().getTime()
 
 let mongoClient = null
+const existingMongoDbs = []
 
-const migrateDocument = (db, collection, docIdList, index = 0) => {
+const migrateDocument = (db, collection, docIdList, checkDuplicates = false, index = 0) => {
     if (index >= docIdList.length) {
         return new Promise(resolve => {
             resolve()
         })
     }
     const docId = docIdList[index]
-    return db.get(docId).then(doc => collection.insertOne(doc))
-        .then(() => migrateDocument(db, collection, docIdList, index + 1))
+    if (checkDuplicates) {
+        return collection.find({ _id: docId }).toArray().then(docList => {
+            if (docList.length == 0) {
+                return db.get(docId).then(doc => collection.insertOne(doc)).then(() => migrateDocument(db, collection, docIdList, checkDuplicates, index + 1))
+            } else {
+                return migrateDocument(db, collection, docIdList, checkDuplicates, index + 1)
+            }
+        })
+    } else {
+        return db.get(docId).then(doc => collection.insertOne(doc))
+            .then(() => migrateDocument(db, collection, docIdList, checkDuplicates, index + 1))
+    }
 }
 
 // declare function for recursive database migration
@@ -40,8 +51,7 @@ const migrateDatabase = (dbList, index = 0) => {
     return db.list()
         .then(documents => {
             console.log("Processing", documents.rows.length, "documents")
-            const promises = []
-            return migrateDocument(db, collection, documents.rows.map(docKey => docKey.id).filter(id => !id.startsWith("_design")))
+            return migrateDocument(db, collection, documents.rows.map(docKey => docKey.id).filter(id => !id.startsWith("_design")), existingMongoDbs.indexOf(mongoName) !== -1)
         })
         .then(() => {
             console.log("Done")
@@ -51,6 +61,13 @@ const migrateDatabase = (dbList, index = 0) => {
 
 mongoServer.then(client => {
         mongoClient = client
+        const admin = mongoClient.db("admin").admin()
+        return admin.listDatabases()
+    })
+    .then(adminData => {
+        adminData.databases.forEach(dbName => {
+            existingMongoDbs.push(dbName)
+        })
         return couchServer.db.list()
     })
     .then(databases => {
