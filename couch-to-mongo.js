@@ -3,11 +3,12 @@ import mongodb from "mongodb"
 
 const COUCH_HOST = process.env.COUCH || "http://localhost:5984"
 const MONGO_HOST = process.env.MONGO || "mongodb://localhost:27017"
+const DB_LIST = process.env.DB_LIST || null
 
 const couchServer = nano(COUCH_HOST)
 const mongoServer = mongodb.MongoClient.connect(MONGO_HOST)
 
-const databaseList = []
+let databaseList = []
 const startDate = new Date().getTime()
 
 let mongoClient = null
@@ -72,14 +73,29 @@ mongoServer.then(client => {
     })
     .then(databases => {
         console.log("Found databases", databases)
-        databases.forEach(databaseName => {
-            if (databaseName.startsWith("_")) {
-                // skip system databases
-                return
-            }
 
-            databaseList.push(databaseName)
-        })
+        // check if only specific dbs are to be copied
+        if (DB_LIST != null) {
+            // check whether they actually exist
+            DB_LIST.split(",").forEach(toBeMigrated => {
+                if (databases.indexOf(toBeMigrated) === -1) {
+                    // abort execution
+                    throw new Error(`Database ${toBeMigrated} could not be found`)
+                }
+            })
+            // all DBs found, set them to be migrated
+            databaseList = DB_LIST.split(",")
+        } else {
+            // add all databases to migration task
+            databases.forEach(databaseName => {
+                if (databaseName.startsWith("_")) {
+                    // skip system databases
+                    return
+                }
+
+                databaseList.push(databaseName)
+            })
+        }
     })
     .then(() => {
         // call the migration script with the database list
