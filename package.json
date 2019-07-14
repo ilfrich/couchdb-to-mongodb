@@ -5,7 +5,8 @@
   "main": "couch-to-mongo.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "babel-node couch-to-mongo.js"
+    "start": "babel-node couch-to-mongo.js",
+    "reverse": "babel-node mongo-to-couch.js"
   },
   "repository": {
     "type": "git",
@@ -18,12 +19,12 @@
   },
   "homepage": "https://github.com/ilfrich/couchdb-to-mongodb#readme",
   "dependencies": {
-    "mongodb": "^3.1.13",
-    "nano": "^8.0.1"
+    "mongodb": "^3.2.7",
+    "nano": "^8.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.4.0",
-    "@babel/node": "^7.2.2",
-    "@babel/preset-env": "^7.4.1"
+    "@babel/core": "^7.5.4",
+    "@babel/node": "^7.5.0",
+    "@babel/preset-env": "^7.5.4"
   }
 }
